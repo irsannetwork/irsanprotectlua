@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IR-Lua Protect | Official</title>
+    <title>IR-LUA PROTECT | Official Panel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
             --bg: #05070a; --card: #111418; --primary: #3b82f6;
             --accent: #10b981; --text: #e2e8f0; --border: #1f2937;
+            --danger: #ef4444;
         }
         body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow: hidden; }
         
+        /* Animasi Loading & Verify */
         #loading-screen, #verify-screen { 
             position: fixed; inset: 0; background: var(--bg); 
             display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; 
@@ -20,8 +22,20 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         #main-app { display: none; height: 100vh; flex-direction: column; }
-        header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--card); }
         
+        /* Header: Menu - LOGO TENGAH - JAM KANAN */
+        header { 
+            padding: 10px 20px; 
+            border-bottom: 1px solid var(--border); 
+            display: grid; 
+            grid-template-columns: 1fr auto 1fr; 
+            align-items: center; 
+            background: var(--card); 
+        }
+        .header-logo { font-weight: 900; letter-spacing: 1px; font-size: 1.1rem; text-align: center; }
+        .header-logo span { color: var(--accent); }
+        .wib-clock { justify-self: end; background: #000; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border); color: var(--accent); font-family: monospace; font-size: 0.8rem; }
+
         #sidebar { position: fixed; left: -280px; top: 0; bottom: 0; width: 265px; background: var(--card); border-right: 1px solid var(--border); transition: 0.4s; z-index: 1000; padding-top: 20px; }
         #sidebar.active { left: 0; }
         .side-logo { padding: 20px; font-weight: 800; font-size: 1.2rem; color: var(--accent); border-bottom: 1px solid var(--border); margin-bottom: 10px; }
@@ -32,179 +46,238 @@
         .content.active { display: block; }
         .tool-card { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 15px; margin-bottom: 20px; }
         
-        textarea { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 10px; color: var(--accent); padding: 12px; font-family: monospace; box-sizing: border-box; outline: none; margin-bottom: 10px;}
-        .btn { background: linear-gradient(135deg, #047857, var(--accent)); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s; display: block; text-align: center; text-decoration: none; }
-        
-        /* Komentar Style */
-        .comment-box { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 15px; }
-        .comment-input { width: 100%; padding: 10px; background: #000; border: 1px solid var(--border); border-radius: 8px; color: white; margin-bottom: 10px; resize: none; }
-        .comment-list { max-height: 250px; overflow-y: auto; margin-top: 15px; }
-        .comment-item { background: #1a1f26; padding: 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.85rem; border-left: 3px solid var(--accent); }
-        .comment-user { color: var(--accent); font-weight: bold; margin-bottom: 4px; display: block; }
-        .comment-time { font-size: 0.7rem; opacity: 0.5; display: block; margin-top: 5px; }
-        .like-section { display: flex; align-items: center; gap: 6px; margin-top: 8px; cursor: pointer; transition: 0.2s; font-weight: bold; width: fit-content; }
-        .like-section.voted { color: #555 !important; cursor: default; }
+        textarea { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 10px; color: var(--accent); padding: 12px; font-family: monospace; box-sizing: border-box; outline: none; margin-bottom: 10px; resize: none;}
+        select { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 10px; color: white; padding: 10px; margin-bottom: 10px; outline: none; }
+        input { width: 100%; background: #000; border: 1px solid var(--border); border-radius: 10px; color: #fff; padding: 12px; margin-bottom: 10px; box-sizing: border-box; outline: none; }
+        .btn { background: linear-gradient(135deg, #047857, var(--accent)); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s; display: block; text-align: center; text-decoration: none; }
+        .btn-upload { background: #1f2937; margin-bottom: 15px; border: 1px solid var(--border); }
 
+        .scan-result { margin-top: 15px; padding: 12px; border-radius: 10px; background: #000; font-size: 0.85rem; border: 1px dashed var(--border); display: none; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 999; }
         .overlay.active { display: block; }
+
+        .status-box { margin-top: 10px; padding: 10px; border-radius: 8px; font-size: 0.8rem; text-align: center; display: none; border: 1px solid var(--accent); color: var(--accent); }
     </style>
 </head>
 <body>
 
-    <div id="loading-screen"><div class="loader"></div><p style="margin-top:20px; color:var(--accent)">IR-LUA LOADING...</p></div>
+    <div id="loading-screen"><div class="loader"></div><p style="margin-top:20px; color:var(--accent)">IR-SYSTEM SECURING...</p></div>
     
     <div id="verify-screen" style="display:none;">
         <div style="text-align:center;">
-            <i class="fas fa-shield-halved" style="font-size:4rem; color:var(--accent); margin-bottom:20px"></i>
+            <i class="fas fa-fingerprint" style="font-size:4rem; color:var(--accent); margin-bottom:20px"></i>
             <h3>SECURITY VERIFICATION</h3>
-            <button class="btn" style="width:200px; margin: 0 auto;" onclick="completeVerify()">SAYA BUKAN ROBOT</button>
+            <button class="btn" style="width:180px; margin: 0 auto;" onclick="completeVerify()">ACCESS PANEL</button>
         </div>
     </div>
 
     <div id="main-app">
         <header>
-            <i class="fas fa-bars-staggered" style="font-size:1.5rem; cursor:pointer" onclick="toggleSidebar()"></i>
-            <div style="font-weight:900;">IR-LUA <span style="color:var(--accent)">PROTECT</span></div>
-            <i class="fas fa-lock" style="color:var(--accent)"></i>
+            <i class="fas fa-bars-staggered" style="font-size:1.3rem; cursor:pointer" onclick="toggleSidebar()"></i>
+            <div class="header-logo">IR-LUA <span>PROTECT</span></div>
+            <div class="wib-clock" id="clock">00:00:00 WIB</div>
         </header>
 
         <nav id="sidebar">
             <div class="side-logo">RC TEAM PANEL</div>
             <div class="side-item" onclick="showPage('home')"><i class="fas fa-house"></i> Dashboard</div>
-            <div class="side-item" onclick="showPage('obfuscator')"><i class="fas fa-file-shield"></i> Obfuscator IR-Lua</div>
+            <div class="side-item" onclick="showPage('obfuscator')"><i class="fas fa-file-shield"></i> Obfuscator V1</div>
+            <div class="side-item" onclick="showPage('scanner')"><i class="fas fa-user-secret"></i> Anti-Keylogger</div>
+            <div class="side-item" onclick="showPage('spammer')"><i class="fas fa-bolt"></i> IR-Spammer</div>
             <a href="https://wa.me/6289531633581" target="_blank" class="side-item"><i class="fab fa-whatsapp" style="color: #25D366;"></i> WhatsApp Irsan</a>
         </nav>
         <div class="overlay" onclick="toggleSidebar()"></div>
 
         <div id="home" class="content active">
             <div class="tool-card">
-                <h2 style="margin:0; color:var(--accent)">Welcome, pengguna!</h2>
-                <p>pakai tools ini agar kode kamu tidak dicuri orang yang tidak bertanggung jawab</p>
+                <h2 style="margin:0; color:var(--accent)">Welcome, User</h2>
+                <p style="opacity: 0.8; font-size: 0.9rem;">Panel enkripsi lua script untuk Monetloader. Kode akan tetap aman.</p>
             </div>
-
-            <div class="tool-card">
-                <h3><i class="fas fa-comments"></i> Kolom Komentar</h3>
-                <div class="comment-box">
-                    <textarea id="userComment" class="comment-input" style="height: 80px;" placeholder="Tulis komentar kamu di sini..."></textarea>
-                    <button class="btn" onclick="addComment()">Kirim Komentar</button>
-                </div>
-                <div class="comment-list" id="commentList"></div>
+            <div class="tool-card" style="border-left: 4px solid var(--accent);">
+                <small style="opacity: 0.5;">SERVER STATUS</small>
+                <div style="font-weight: bold; color: var(--accent);">V1 ONLINE</div>
             </div>
         </div>
 
         <div id="obfuscator" class="content">
-            <h3>Mulai Encrypt</h3>
+            <h3>IR LUA - Obfuscator V1</h3>
             <div class="tool-card">
-                <input type="file" id="fileIn" style="display:none" onchange="handleFile(event)">
-                <button class="btn" style="background:#1f2937; margin-bottom:10px" onclick="document.getElementById('fileIn').click()">📁 UPLOAD .LUA FILE</button>
-                <textarea id="obsInput" style="height:180px" placeholder="Paste source code here..."></textarea>
+                <input type="file" id="obsFileIn" style="display:none" onchange="handleObsFile(event)">
+                <button class="btn btn-upload" onclick="document.getElementById('obsFileIn').click()"><i class="fas fa-file-import"></i> UPLOAD .LUA FILE</button>
+                <textarea id="obsInput" style="height:150px" placeholder="Paste script di sini..."></textarea>
                 
-                <select id="obsLevel" style="width:100%; padding:12px; background:#000; color:white; border:1px solid var(--border); border-radius:10px; margin-bottom:15px">
-                    <option value="1">V1: IR-Lua1</option>
-                    <option value="2">V2: IR-Lua2</option>
-                    <option value="3">V3: IR-Lua3</option>
+                <label style="font-size: 0.8rem; opacity: 0.6; display: block; margin-bottom: 5px;">Pilih Level Proteksi:</label>
+                <select id="obsLevel">
+                    <option value="1">V1 - Basic Encrypt</option>
+                    <option value="2">V2 - Strong Security</option>
+                    <option value="3">V3 - God Mode</option>
                 </select>
-                
-                <button class="btn" onclick="runObfuscate()">OBFUSCATE!</button>
-                <textarea id="obsOutput" style="height:120px; margin-top:15px" readonly placeholder="hasil disini brok"></textarea>
-                <button class="btn" style="background:#1f2937; margin-top:10px" onclick="downloadFile('obsOutput', 'obfuscare_irsan.lua')">DOWNLOAD .LUA</button>
+
+                <button class="btn" onclick="runBytecodeEnc()"><i class="fas fa-lock"></i> EXECUTE ENCRYPT</button>
+                <textarea id="obsOutput" style="height:120px; margin-top:15px" readonly placeholder="Output hasil..."></textarea>
+                <button class="btn" style="background:#1f2937; margin-top:10px" onclick="downloadFile('obsOutput', 'ir_protected.lua')">DOWNLOAD .LUA</button>
             </div>
         </div>
+
+        <div id="scanner" class="content">
+            <h3>IRLUA - Anti-Keylogger Scanner</h3>
+            <div class="tool-card">
+                <input type="file" id="scanFileIn" style="display:none" onchange="handleScanFile(event)">
+                <button class="btn btn-upload" onclick="document.getElementById('scanFileIn').click()"><i class="fas fa-search"></i> SCAN FILE (.LUA)</button>
+                <textarea id="scanInput" style="height:150px" placeholder="Paste script di sini untuk discan..."></textarea>
+                <button class="btn" onclick="scanScript()">START SCANNING</button>
+                <div id="scanResult" class="scan-result"></div>
+            </div>
+        </div>
+
+        <div id="spammer" class="content">
+            <h3>IR-Spammer Webhooks</h3>
+            <div class="tool-card">
+                <label style="font-size: 0.8rem; opacity: 0.6;">Platform</label>
+                <select id="platform">
+                    <option value="discord">Discord Webhook</option>
+                    <option value="telegram">Telegram Bot</option>
+                </select>
+                <input type="text" id="targetUrl" placeholder="Webhook URL / Bot Token">
+                <input type="text" id="chatId" placeholder="Chat ID (Khusus Telegram)" style="display:none;">
+                <input type="text" id="username" placeholder="Custom Nama Pengirim">
+                <input type="text" id="mainText" placeholder="Pesan Utama">
+                <textarea id="description" style="height:80px;" placeholder="Deskripsi / Embed"></textarea>
+                <input type="text" id="imageUrl" placeholder="Image URL (Gambar)">
+                
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="spamCount" value="1" placeholder="Jumlah">
+                    <input type="number" id="delayTime" value="1" placeholder="Delay (detik)">
+                </div>
+                
+                <button class="btn" onclick="startSpam()"><i class="fas fa-paper-plane"></i> LAUNCH SPAM</button>
+                <div id="spamStatus" class="status-box"></div>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // System UI
-        setTimeout(() => { document.getElementById('loading-screen').style.display='none'; document.getElementById('verify-screen').style.display='flex'; }, 1500);
-        function completeVerify() { document.getElementById('verify-screen').style.display='none'; document.getElementById('main-app').style.display='flex'; loadComments(); }
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.querySelector('.overlay').classList.toggle('active'); }
-        function showPage(id) { document.querySelectorAll('.content').forEach(c => c.classList.remove('active')); document.getElementById(id).classList.add('active'); if(window.innerWidth<768) toggleSidebar(); }
+        function updateClock() {
+            const now = new Date();
+            const options = { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            document.getElementById('clock').innerHTML = new Intl.DateTimeFormat('en-GB', options).format(now) + " WIB";
+        }
+        setInterval(updateClock, 1000);
 
-        // Obfuscator Logic
-        function runObfuscate() {
-            let code = document.getElementById('obsInput').value; 
-            let lv = document.getElementById('obsLevel').value;
-            if(!code) return alert("Input Source!"); 
-            let result = ""; 
-            let header = `-- IR-LUA PROTECT --IR PROTECT V1 JOIN WHATSAPP COMMUNITY ( V${lv} )\n`;
-            
-            if(lv == "1") { for(let i=0; i<code.length; i++) result += String.fromCharCode(code.charCodeAt(i) + 7); } 
-            else if(lv == "2") { let rev = code.split("").reverse().join(""); for(let i=0; i<rev.length; i++) result += String.fromCharCode(rev.charCodeAt(i) + 12); } 
-            else { for(let i=0; i<code.length; i++) result += String.fromCharCode(code.charCodeAt(i) + 33); }
-            document.getElementById('obsOutput').value = `${header}local _IR = "${btoa(result)}"\nreturn _IR`;
+        setTimeout(() => { 
+            document.getElementById('loading-screen').style.display='none'; 
+            document.getElementById('verify-screen').style.display='flex'; 
+        }, 2000);
+
+        function completeVerify() { 
+            document.getElementById('verify-screen').style.display='none'; 
+            document.getElementById('main-app').style.display='flex'; 
+            updateClock(); 
         }
 
-        // Automatic Name Detection
-        function getBrowserUser() {
-            const ua = navigator.userAgent;
-            if (ua.includes("Chrome")) return "Chrome User";
-            if (ua.includes("Firefox")) return "Firefox User";
-            if (ua.includes("Safari") && !ua.includes("Chrome")) return "Apple User";
-            return "Mobile User";
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('active'); 
+            document.querySelector('.overlay').classList.toggle('active'); 
         }
 
-        // Comment System with Anti-Spam Like
-        function addComment() {
-            const text = document.getElementById('userComment').value;
-            if(!text) return alert("Komentar tidak boleh kosong!");
-
-            const commentObj = {
-                id: Date.now(),
-                name: getBrowserUser(),
-                text: text,
-                time: new Date().toLocaleString(),
-                likes: 0
-            };
-
-            let comments = JSON.parse(localStorage.getItem('ir_comments') || '[]');
-            comments.unshift(commentObj);
-            localStorage.setItem('ir_comments', JSON.stringify(comments));
-
-            document.getElementById('userComment').value = '';
-            loadComments();
+        function showPage(id) { 
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active')); 
+            document.getElementById(id).classList.add('active'); 
+            if(window.innerWidth < 768) toggleSidebar(); 
         }
 
-        function loadComments() {
-            const list = document.getElementById('commentList');
-            let comments = JSON.parse(localStorage.getItem('ir_comments') || '[]');
-            let likedIds = JSON.parse(localStorage.getItem('ir_liked_ids') || '[]');
+        // Toggle Chat ID field for Telegram
+        document.getElementById('platform').addEventListener('change', function() {
+            document.getElementById('chatId').style.display = this.value === 'telegram' ? 'block' : 'none';
+        });
 
-            list.innerHTML = comments.map((c) => {
-                const isLiked = likedIds.includes(c.id);
-                return `
-                    <div class="comment-item">
-                        <span class="comment-user"><i class="fas fa-user-circle"></i> ${c.name}</span>
-                        <div style="color:white;">${c.text}</div>
-                        <span class="comment-time">${c.time}</span>
-                        <div class="like-section ${isLiked ? 'voted' : ''}" onclick="likeComment(${c.id})">
-                            <i class="fas fa-thumbs-up" style="color: ${isLiked ? '#555' : 'var(--accent)'}"></i> 
-                            <span>${c.likes} Suka</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function likeComment(id) {
-            let likedIds = JSON.parse(localStorage.getItem('ir_liked_ids') || '[]');
-            if(likedIds.includes(id)) return; // Blokir jika sudah like
-
-            let comments = JSON.parse(localStorage.getItem('ir_comments') || '[]');
-            const idx = comments.findIndex(c => c.id === id);
-            
-            if(idx !== -1) {
-                comments[idx].likes += 1;
-                likedIds.push(id);
-                localStorage.setItem('ir_comments', JSON.stringify(comments));
-                localStorage.setItem('ir_liked_ids', JSON.stringify(likedIds));
-                loadComments();
-            }
-        }
-
-        function handleFile(e) {
+        function handleObsFile(e) {
             let fr = new FileReader();
             fr.onload = (el) => document.getElementById('obsInput').value = el.target.result;
             fr.readAsText(e.target.files[0]);
         }
+
+        function runBytecodeEnc() {
+            const input = document.getElementById('obsInput').value;
+            const level = document.getElementById('obsLevel').value;
+            if(!input) return alert("Masukkan script!");
+
+            const key = Math.floor(Math.random() * 30) + 10;
+            let result = "";
+
+            if(level === "1") {
+                const bytes = input.split('').map(c => c.charCodeAt(0) + key).join(',');
+                result = `-- IR-V1\nlocal _v={${bytes}};local _k=${key};local _s="";for i=1,#_v do _s=_s..string.char(_v[i]-_k) end;(loadstring or load)(_s)()`;
+            } else if(level === "2") {
+                const bytes = input.split('').map(c => c.charCodeAt(0) + key).reverse().join(',');
+                result = `-- IR-V2\nlocal _v={${bytes}};local _k=${key};local _s="";for i=#_v,1,-1 do _s=_s..string.char(_v[i]-_k) end;(loadstring or load)(_s)()`;
+            } else {
+                const bytes = input.split('').map(c => c.charCodeAt(0) + key).join(',');
+                let garbage = "";
+                for(let i=0; i<15; i++) garbage += "-- " + Math.random().toString(36).substring(7) + " RC TEAM\n";
+                result = `-- IR-V1 GOD MODE\n${garbage}\nlocal _v={${bytes}}\nlocal _k=${key}\nlocal _s=""\nfor _i=1,#_v do _s=_s..string.char(_v[_i]-_k) end\nlocal _f = (loadstring or load)(_s)\nif _f then _f() end\n${garbage}`;
+            }
+
+            document.getElementById('obsOutput').value = result;
+            alert("Berhasil Encrypt ke V" + level);
+        }
+
+        async function startSpam() {
+            const platform = document.getElementById('platform').value;
+            const target = document.getElementById('targetUrl').value;
+            const text = document.getElementById('mainText').value;
+            const count = parseInt(document.getElementById('spamCount').value);
+            const delay = parseInt(document.getElementById('delayTime').value) * 1000;
+            const status = document.getElementById('spamStatus');
+
+            if(!target || !text) return alert("Isi Target dan Pesan!");
+
+            status.style.display = "block";
+            for(let i=1; i<=count; i++) {
+                status.innerText = `Mengirim ke-${i}...`;
+                try {
+                    if(platform === 'discord') {
+                        await fetch(target, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                username: document.getElementById('username').value || "IR-Spammer",
+                                content: text,
+                                embeds: [{ description: document.getElementById('description').value, image: {url: document.getElementById('imageUrl').value} }]
+                            })
+                        });
+                    } else {
+                        const cid = document.getElementById('chatId').value;
+                        const msg = encodeURIComponent(text + "\n" + document.getElementById('description').value);
+                        await fetch(`https://api.telegram.org/bot${target}/sendMessage?chat_id=${cid}&text=${msg}`);
+                    }
+                } catch(e) {}
+                if(i < count) await new Promise(r => setTimeout(r, delay));
+            }
+            status.innerText = "Selesai!";
+        }
+
+        function handleScanFile(e) {
+            let fr = new FileReader();
+            fr.onload = (el) => { document.getElementById('scanInput').value = el.target.result; scanScript(); };
+            fr.readAsText(e.target.files[0]);
+        }
+
+        function scanScript() {
+            let code = document.getElementById('scanInput').value;
+            const resDiv = document.getElementById('scanResult');
+            resDiv.style.display = "block";
+            const foundUrls = code.match(/https?:\/\/[^\s'"]+/g);
+            if(foundUrls) {
+                resDiv.style.borderColor = "var(--danger)";
+                resDiv.innerHTML = `<b style="color:var(--danger)">DITEMUKAN URL!</b><br>` + foundUrls.map(u => `<div style="font-size:0.7rem;">${u}</div>`).join('');
+            } else {
+                resDiv.style.borderColor = "var(--accent)";
+                resDiv.innerHTML = `<b style="color:var(--accent)">Script Aman.</b>`;
+            }
+        }
+
         function downloadFile(id, name) {
             let t = document.getElementById(id).value; if(!t) return;
             let b = new Blob([t], {type:"text/plain"});
