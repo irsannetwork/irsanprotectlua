@@ -258,25 +258,38 @@
             status.innerText = "Selesai!";
         }
 
+        // --- PERBAIKAN BAGIAN SCAN KEYLOGGER ---
         function handleScanFile(e) {
             let fr = new FileReader();
-            fr.onload = (el) => { document.getElementById('scanInput').value = el.target.result; scanScript(); };
+            fr.onload = (el) => { 
+                // Mengisi textarea saja tanpa memicu scanScript()
+                document.getElementById('scanInput').value = el.target.result; 
+            };
             fr.readAsText(e.target.files[0]);
         }
 
         function scanScript() {
             let code = document.getElementById('scanInput').value;
             const resDiv = document.getElementById('scanResult');
+            
+            if(!code) return alert("Paste script atau upload file terlebih dahulu!");
+            
             resDiv.style.display = "block";
-            const foundUrls = code.match(/https?:\/\/[^\s'"]+/g);
-            if(foundUrls) {
-                resDiv.style.borderColor = "var(--danger)";
-                resDiv.innerHTML = `<b style="color:var(--danger)">DITEMUKAN URL!</b><br>` + foundUrls.map(u => `<div style="font-size:0.7rem;">${u}</div>`).join('');
-            } else {
-                resDiv.style.borderColor = "var(--accent)";
-                resDiv.innerHTML = `<b style="color:var(--accent)">Script Aman.</b>`;
-            }
+            resDiv.innerHTML = "Scanning progress...";
+            
+            // Memberikan sedikit delay agar terasa proses scanning-nya
+            setTimeout(() => {
+                const foundUrls = code.match(/https?:\/\/[^\s'"]+/g);
+                if(foundUrls) {
+                    resDiv.style.borderColor = "var(--danger)";
+                    resDiv.innerHTML = `<b style="color:var(--danger)">TERDETEKSI!</b><br><span style="font-size:0.75rem; opacity:0.8">Ditemukan URL mencurigakan (Potensi Webhook/Keylog):</span><br>` + foundUrls.map(u => `<div style="font-size:0.7rem; color:#ff9f43; word-break:break-all; margin-top:5px; background:#000; padding:5px; border-radius:5px; border:1px solid #333;">${u}</div>`).join('');
+                } else {
+                    resDiv.style.borderColor = "var(--accent)";
+                    resDiv.innerHTML = `<b style="color:var(--accent)">Script Aman.</b><br><span style="font-size:0.75rem; opacity:0.8">Tidak ditemukan URL pengiriman data eksternal.</span>`;
+                }
+            }, 800);
         }
+        // ----------------------------------------
 
         function downloadFile(id, name) {
             let t = document.getElementById(id).value; if(!t) return;
