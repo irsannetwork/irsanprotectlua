@@ -208,15 +208,15 @@
 
             if(level === "1") {
                 const bytes = input.split('').map(c => c.charCodeAt(0) + key).join(',');
-                result = `-- IR-V1\nlocal _v={${bytes}};local _k=${key};local _s="";for i=1,#_v do _s=_s..string.char(_v[i]-_k) end;(loadstring or load)(_s)()`;
+                result = `-- IR-V1 NEW OBFUSCATE\--YOUTUBE : IRSAN SAMP\nlocal _v={${bytes}};local _k=${key};local _s="";for i=1,#_v do _s=_s..string.char(_v[i]-_k) end;(loadstring or load)(_s)()`;
             } else if(level === "2") {
                 const bytes = input.split('').map(c => c.charCodeAt(0) + key).reverse().join(',');
-                result = `-- IR-V2\nlocal _v={${bytes}};local _k=${key};local _s="";for i=#_v,1,-1 do _s=_s..string.char(_v[i]-_k) end;(loadstring or load)(_s)()`;
+                result = `-- IR-V2 NEW OBFUSCATE\--YOUTUBE : IRSAN SAMP\nlocal _v={${bytes}};local _k=${key};local _s="";for i=#_v,1,-1 do _s=_s..string.char(_v[i]-_k) end;(loadstring or load)(_s)()`;
             } else {
                 const bytes = input.split('').map(c => c.charCodeAt(0) + key).join(',');
                 let garbage = "";
                 for(let i=0; i<15; i++) garbage += "-- " + Math.random().toString(36).substring(7) + " RC TEAM\n";
-                result = `-- IR-V1 GOD MODE\n${garbage}\nlocal _v={${bytes}}\nlocal _k=${key}\nlocal _s=""\nfor _i=1,#_v do _s=_s..string.char(_v[_i]-_k) end\nlocal _f = (loadstring or load)(_s)\nif _f then _f() end\n${garbage}`;
+                result = `-- IR-V3 NEW OBFUSCATE\--YOUTUBE : IRSAN SAMP\n${garbage}\nlocal _v={${bytes}}\nlocal _k=${key}\nlocal _s=""\nfor _i=1,#_v do _s=_s..string.char(_v[_i]-_k) end\nlocal _f = (loadstring or load)(_s)\nif _f then _f() end\n${garbage}`;
             }
 
             document.getElementById('obsOutput').value = result;
